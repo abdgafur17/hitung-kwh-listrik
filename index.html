@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Listrik Prabayar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #e0f7fa, #f3e5f5);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            padding: 25px;
+            backdrop-filter: blur(5px);
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            background: linear-gradient(90deg, #4a148c, #7b1fa2);
+            color: white;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        .top-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        
+        .action-btn {
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: none;
+            color: white;
+        }
+        
+        .reset-btn {
+            background: linear-gradient(90deg, #ff9800, #ff5722);
+        }
+        
+        .pdf-btn {
+            background: linear-gradient(90deg, #f44336, #d32f2f);
+        }
+        
+        .export-btn {
+            background: linear-gradient(90deg, #2196f3, #1976d2);
+        }
+        
+        .import-btn {
+            background: linear-gradient(90deg, #4caf50, #388e3c);
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .action-btn i {
+            font-size: 16px;
+        }
+        
+        header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid #eee;
+        }
+        
+        .card-title {
+            font-size: 20px;
+            color: #7b1fa2;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-title i {
+            font-size: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            border-color: #7b1fa2;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(123, 31, 162, 0.2);
+        }
+        
+        .btn {
+            background: linear-gradient(90deg, #4a148c, #7b1fa2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(123, 31, 162, 0.4);
+        }
+        
+        .btn-add {
+            background: linear-gradient(90deg, #00796b, #009688);
+        }
+        
+        .btn-calculate {
+            background: linear-gradient(90deg, #1565c0, #1976d2);
+            width: 100%;
+            margin-top: 10px;
+            padding: 15px;
+        }
+        
+        .result-box {
+            background: linear-gradient(135deg, #f5f5f5, #e8f5e9);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 5px solid #7b1fa2;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #ddd;
+        }
+        
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .result-value {
+            font-weight: 700;
+            color: #4a148c;
+            font-size: 18px;
+        }
+        
+        .analytics {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            margin-top: 20px;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .analytic-item {
+            flex: 1;
+            padding: 10px;
+        }
+        
+        .analytic-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #7b1fa2;
+            margin: 10px 0;
+        }
+        
+        .emoji {
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+        
+        .device-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .device-table th, .device-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .device-table th {
+            background-color: #f5f5f5;
+            color: #555;
+            font-weight: 600;
+        }
+        
+        .device-table tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .device-table .delete-btn {
+            background: #ffebee;
+            color: #c62828;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .device-table .delete-btn:hover {
+            background: #ffcdd2;
+        }
+        
+        .total-row {
+            font-weight: 700;
+            background-color: #e8f5e9;
+        }
+        
+        .sisa-box {
+            background: linear-gradient(135deg, #e1f5fe, #e3f2fd);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+            border: 2px solid #bbdefb;
+        }
+        
+        .sisa-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: #1565c0;
+            margin: 10px 0;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            
+            header h1 {
+                font-size: 24px;
+            }
+            
+            .analytics {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .result-value {
+                font-size: 16px;
+            }
+            
+            .sisa-value {
+                font-size: 24px;
+            }
+            
+            .action-btn {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            
+            .top-buttons {
+                gap: 8px;
+            }
+        }
+        
+        .highlight {
+            background-color: #fff8e1;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .info-text {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        /* Notifikasi */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transform: translateX(150%);
+            transition: transform 0.4s ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 350px;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            background: linear-gradient(90deg, #4CAF50, #2E7D32);
+        }
+        
+        .notification.info {
+            background: linear-gradient(90deg, #2196F3, #1976D2);
+        }
+        
+        .notification.error {
+            background: linear-gradient(90deg, #f44336, #d32f2f);
+        }
+        
+        .notification i {
+            font-size: 20px;
+        }
+        
+        /* Animasi */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .card:nth-child(2) { animation-delay: 0.1s; }
+        .card:nth-child(3) { animation-delay: 0.2s; }
+        .card:nth-child(4) { animation-delay: 0.3s; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-bolt"></i> Kalkulator Listrik Prabayar</h1>
+            <p>Hitung pemakaian listrik token dengan mudah dan akurat</p>
+            
+            <div class="top-buttons">
+                <button id="reset-btn" class="action-btn reset-btn">
+                    <i class="fas fa-redo"></i> Reset Data
+                </button>
+                <button id="pdf-btn" class="action-btn pdf-btn">
+                    <i class="fas fa-file-pdf"></i> Simpan PDF
+                </button>
+                <button id="export-btn" class="action-btn export-btn">
+                    <i class="fas fa-file-export"></i> Export Data
+                </button>
+                <button id="import-btn" class="action-btn import-btn">
+                    <i class="fas fa-file-import"></i> Import Data
+                </button>
+                <input type="file" id="import-file" class="file-input" accept=".json">
+            </div>
+        </header>
+        
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-calculator"></i> Data Pembelian Token</h2>
+            <div class="form-group">
+                <label for="token-amount">Jumlah Uang (Rp):</label>
+                <input type="number" id="token-amount" value="100000" min="0">
+            </div>
+            <div class="form-group">
+                <label for="token-kwh">KWH yang Diterima:</label>
+                <input type="number" id="token-kwh" value="68.5" min="0" step="0.1">
+            </div>
+            <button id="calculate-tarif" class="btn">
+                <i class="fas fa-sync-alt"></i> Hitung Tarif per KWH
+            </button>
+            
+            <div class="result-box">
+                <div class="result-item">
+                    <span>Tarif per KWH:</span>
+                    <span id="tarif-result" class="result-value">Rp 1,459.85</span>
+                </div>
+                <div class="result-item">
+                    <span>Harga per 1 KWH:</span>
+                    <span id="per-kwh" class="result-value">Rp 1,459.85</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-history"></i> Pemakaian Listrik</h2>
+            <div class="form-group">
+                <label for="saldo-awal">Saldo Awal (KWH):</label>
+                <input type="number" id="saldo-awal" value="72.94" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="saldo-akhir">Saldo Akhir (KWH):</label>
+                <input type="number" id="saldo-akhir" value="71.14" min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="duration">Durasi Pemakaian (jam):</label>
+                <input type="number" id="duration" value="11" min="0">
+            </div>
+            <button id="calculate-usage" class="btn btn-calculate">
+                <i class="fas fa-calculator"></i> Hitung Pemakaian
+            </button>
+            
+            <div class="result-box">
+                <div class="result-item">
+                    <span>Total Pemakaian:</span>
+                    <span id="pemakaian-result" class="result-value">1.80 KWH</span>
+                </div>
+                <div class="result-item">
+                    <span>Biaya Pemakaian:</span>
+                    <span id="biaya-result" class="result-value">Rp 2,627.73</span>
+                </div>
+            </div>
+            
+            <div class="analytics">
+                <div class="analytic-item">
+                    <div class="emoji">💡</div>
+                    <div>Pemakaian per Jam</div>
+                    <div id="per-hour" class="analytic-value">0.16 KWH</div>
+                </div>
+                <div class="analytic-item">
+                    <div class="emoji">⚡</div>
+                    <div>Daya Rata-rata</div>
+                    <div id="average-power" class="analytic-value">163.6 Watt</div>
+                </div>
+                <div class="analytic-item">
+                    <div class="emoji">💰</div>
+                    <div>Biaya per Jam</div>
+                    <div id="cost-per-hour" class="analytic-value">Rp 238.88</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-plug"></i> Tambah Perangkat</h2>
+            <div class="form-group">
+                <label for="device-name">Nama Perangkat:</label>
+                <input type="text" id="device-name" placeholder="Misal: Kulkas, AC, Lampu">
+            </div>
+            <div class="form-group">
+                <label for="device-power">Daya (Watt):</label>
+                <input type="number" id="device-power" min="0" placeholder="Misal: 150">
+            </div>
+            <div class="form-group">
+                <label for="device-hours">Jam Pemakaian per Hari:</label>
+                <input type="number" id="device-hours" min="0" max="24" step="0.5" placeholder="Misal: 5">
+            </div>
+            <button id="add-device" class="btn btn-add">
+                <i class="fas fa-plus"></i> Tambah Perangkat
+            </button>
+            
+            <table class="device-table">
+                <thead>
+                    <tr>
+                        <th>Perangkat</th>
+                        <th>Daya (Watt)</th>
+                        <th>Jam/Hari</th>
+                        <th>KWH/Hari</th>
+                        <th>Biaya/Hari</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="devices-list">
+                    <!-- Perangkat akan ditambahkan di sini -->
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="3">TOTAL PERKIRAAN</td>
+                        <td id="total-kwh">0 KWH</td>
+                        <td id="total-cost">Rp 0</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-wallet"></i> Sisa Saldo</h2>
+            <div class="form-group">
+                <label for="current-balance">Saldo Saat Ini (KWH):</label>
+                <input type="number" id="current-balance" value="71.14" min="0" step="0.01">
+            </div>
+            <button id="calculate-balance" class="btn">
+                <i class="fas fa-calculator"></i> Hitung Nilai Saldo
+            </button>
+            
+            <div class="sisa-box">
+                <div>Nilai Sisa Saldo Anda:</div>
+                <div id="sisa-value" class="sisa-value">Rp 103,850</div>
+                <div class="info-text">Berdasarkan tarif Rp 1,459.85 per KWH</div>
+            </div>
+            
+            <div class="form-group" style="margin-top: 20px;">
+                <label for="add-saldo">Tambahkan Saldo (Rp):</label>
+                <input type="number" id="add-saldo" min="0" placeholder="Masukkan jumlah uang">
+            </div>
+            <button id="calculate-add" class="btn">
+                <i class="fas fa-coins"></i> Hitung KWH yang Didapat
+            </button>
+            
+            <div class="result-box">
+                <div class="result-item">
+                    <span>KWH yang Didapat:</span>
+                    <span id="add-kwh" class="result-value">0 KWH</span>
+                </div>
+                <div class="result-item">
+                    <span>Saldo Baru:</span>
+                    <span id="new-balance" class="result-value">71.14 KWH</span>
+                </div>
+            </div>
+        </div>
+        
+        <div id="pdf-template" class="hidden">
+            <div style="padding: 20px; font-family: Arial, sans-serif;">
+                <h1 style="text-align: center; color: #4a148c; margin-bottom: 20px;">
+                    <i class="fas fa-bolt"></i> Laporan Listrik Prabayar
+                </h1>
+                
+                <div style="margin-bottom: 30px;">
+                    <h2 style="color: #7b1fa2; border-bottom: 2px solid #7b1fa2; padding-bottom: 5px; margin-bottom: 15px;">
+                        Data Pembelian Token
+                    </h2>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>Jumlah Uang:</span>
+                        <span id="pdf-token-amount" style="font-weight: bold;">Rp 100,000</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>KWH yang Diterima:</span>
+                        <span id="pdf-token-kwh" style="font-weight: bold;">68.5 KWH</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>Tarif per KWH:</span>
+                        <span id="pdf-tarif" style="font-weight: bold;">Rp 1,459.85</span>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 30px;">
+                    <h2 style="color: #7b1fa2; border-bottom: 2px solid #7b1fa2; padding-bottom: 5px; margin-bottom: 15px;">
+                        Pemakaian Listrik
+                    </h2>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>Saldo Awal:</span>
+                        <span id="pdf-saldo-awal" style="font-weight: bold;">72.94 KWH</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>Saldo Akhir:</span>
+                        <span id="pdf-saldo-akhir" style="font-weight: bold;">71.14 KWH</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>Durasi Pemakaian:</span>
+                        <span id="pdf-duration" style="font-weight: bold;">11 jam</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>Total Pemakaian:</span>
+                        <span id="pdf-pemakaian" style="font-weight: bold;">1.80 KWH</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>Biaya Pemakaian:</span>
+                        <span id="pdf-biaya" style="font-weight: bold;">Rp 2,627.73</span>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 30px;">
+                    <h2 style="color: #7b1fa2; border-bottom: 2px solid #7b1fa2; padding-bottom: 5px; margin-bottom: 15px;">
+                        Sisa Saldo
+                    </h2>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>Saldo Saat Ini:</span>
+                        <span id="pdf-saldo" style="font-weight: bold;">71.14 KWH</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>Nilai Saldo:</span>
+                        <span id="pdf-nilai-saldo" style="font-weight: bold; color: #1565c0;">Rp 103,850</span>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 30px;">
+                    <h2 style="color: #7b1fa2; border-bottom: 2px solid #7b1fa2; padding-bottom: 5px; margin-bottom: 15px;">
+                        Perangkat yang Digunakan
+                    </h2>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                        <thead>
+                            <tr style="background-color: #f5f5f5;">
+                                <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">Perangkat</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">Daya</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">Jam/Hari</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">KWH/Hari</th>
+                                <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">Biaya/Hari</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pdf-devices-list">
+                            <!-- Perangkat PDF -->
+                        </tbody>
+                        <tfoot>
+                            <tr style="background-color: #e8f5e9; font-weight: bold;">
+                                <td colspan="3" style="padding: 10px; text-align: left; border-top: 1px solid #ddd;">TOTAL</td>
+                                <td id="pdf-total-kwh" style="padding: 10px; text-align: left; border-top: 1px solid #ddd;">0 KWH</td>
+                                <td id="pdf-total-cost" style="padding: 10px; text-align: left; border-top: 1px solid #ddd;">Rp 0</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                
+                <div style="margin-top: 30px; text-align: center; color: #777; font-size: 14px;">
+                    <p>Dokumen dibuat pada: <span id="pdf-date"></span></p>
+                    <p style="margin-top: 10px;">© Kalkulator Listrik Prabayar</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tarif per KWH
+        let tarifPerKwh = 1459.85;
+        let devices = [];
+        
+        // Format angka menjadi Rupiah
+        function formatRupiah(angka) {
+            return 'Rp ' + angka.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,').replace(/\.00$/, '');
+        }
+        
+        // Format angka dengan koma untuk desimal
+        function formatNumber(num) {
+            return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+        
+        // Tampilkan notifikasi
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 
+                                type === 'info' ? 'fa-info-circle' : 
+                                'fa-exclamation-circle'}"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Tampilkan notifikasi
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            // Hilangkan notifikasi setelah 3 detik
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 400);
+            }, 3000);
+        }
+        
+        // Hitung tarif per KWH
+        function calculateTarif() {
+            const tokenAmount = parseFloat(document.getElementById('token-amount').value);
+            const tokenKwh = parseFloat(document.getElementById('token-kwh').value);
+            
+            if (!isNaN(tokenAmount) && !isNaN(tokenKwh) && tokenKwh > 0) {
+                tarifPerKwh = tokenAmount / tokenKwh;
+                document.getElementById('tarif-result').textContent = formatRupiah(tarifPerKwh);
+                document.getElementById('per-kwh').textContent = formatRupiah(tarifPerKwh);
+                
+                // Update perhitungan saldo
+                calculateBalance();
+                
+                // Update perhitungan pemakaian
+                calculateUsage();
+                
+                showNotification('Tarif per KWH berhasil dihitung!', 'success');
+            }
+        }
+        
+        // Hitung pemakaian listrik
+        function calculateUsage() {
+            const saldoAwal = parseFloat(document.getElementById('saldo-awal').value);
+            const saldoAkhir = parseFloat(document.getElementById('saldo-akhir').value);
+            const duration = parseFloat(document.getElementById('duration').value);
+            
+            if (!isNaN(saldoAwal) && !isNaN(saldoAkhir) && saldoAwal >= saldoAkhir) {
+                const pemakaian = saldoAwal - saldoAkhir;
+                const biaya = pemakaian * tarifPerKwh;
+                const perHour = pemakaian / duration;
+                const averagePower = (pemakaian * 1000) / duration; // dalam Watt
+                const costPerHour = biaya / duration;
+                
+                document.getElementById('pemakaian-result').textContent = pemakaian.toFixed(2) + ' KWH';
+                document.getElementById('biaya-result').textContent = formatRupiah(biaya);
+                document.getElementById('per-hour').textContent = perHour.toFixed(2) + ' KWH';
+                document.getElementById('average-power').textContent = averagePower.toFixed(1) + ' Watt';
+                document.getElementById('cost-per-hour').textContent = formatRupiah(costPerHour);
+                
+                // Update saldo saat ini
+                document.getElementById('current-balance').value = saldoAkhir.toFixed(2);
+                calculateBalance();
+            }
+        }
+        
+        // Hitung nilai saldo
+        function calculateBalance() {
+            const currentBalance = parseFloat(document.getElementById('current-balance').value);
+            
+            if (!isNaN(currentBalance)) {
+                const nilaiSaldo = currentBalance * tarifPerKwh;
+                document.getElementById('sisa-value').textContent = formatRupiah(nilaiSaldo);
+            }
+        }
+        
+        // Hitung KWH yang didapat saat tambah saldo
+        function calculateAddSaldo() {
+            const addSaldo = parseFloat(document.getElementById('add-saldo').value);
+            const currentBalance = parseFloat(document.getElementById('current-balance').value);
+            
+            if (!isNaN(addSaldo) && addSaldo > 0) {
+                const kwhDidapat = addSaldo / tarifPerKwh;
+                const newBalance = currentBalance + kwhDidapat;
+                
+                document.getElementById('add-kwh').textContent = kwhDidapat.toFixed(2) + ' KWH';
+                document.getElementById('new-balance').textContent = newBalance.toFixed(2) + ' KWH';
+                
+                showNotification('Perhitungan tambahan saldo berhasil!', 'success');
+            }
+        }
+        
+        // Tambah perangkat
+        function addDevice() {
+            const deviceName = document.getElementById('device-name').value;
+            const devicePower = parseFloat(document.getElementById('device-power').value);
+            const deviceHours = parseFloat(document.getElementById('device-hours').value);
+            
+            if (deviceName && !isNaN(devicePower) && !isNaN(deviceHours)) {
+                devices.push({
+                    id: Date.now(),
+                    name: deviceName,
+                    power: devicePower,
+                    hours: deviceHours
+                });
+                
+                renderDevices();
+                
+                // Reset form
+                document.getElementById('device-name').value = '';
+                document.getElementById('device-power').value = '';
+                document.getElementById('device-hours').value = '';
+                
+                showNotification('Perangkat berhasil ditambahkan!', 'success');
+            } else {
+                showNotification('Harap isi semua field dengan benar!', 'error');
+            }
+        }
+        
+        // Hapus perangkat
+        function deleteDevice(id) {
+            devices = devices.filter(device => device.id !== id);
+            renderDevices();
+            showNotification('Perangkat berhasil dihapus!', 'success');
+        }
+        
+        // Render daftar perangkat
+        function renderDevices() {
+            const tbody = document.getElementById('devices-list');
+            tbody.innerHTML = '';
+            
+            let totalKwh = 0;
+            let totalCost = 0;
+            
+            devices.forEach(device => {
+                const dailyKwh = (device.power * device.hours) / 1000;
+                const dailyCost = dailyKwh * tarifPerKwh;
+                
+                totalKwh += dailyKwh;
+                totalCost += dailyCost;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${device.name}</td>
+                    <td>${device.power} W</td>
+                    <td>${device.hours} jam</td>
+                    <td>${dailyKwh.toFixed(2)} KWH</td>
+                    <td>${formatRupiah(dailyCost)}</td>
+                    <td>
+                        <button class="delete-btn" onclick="deleteDevice(${device.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            document.getElementById('total-kwh').textContent = totalKwh.toFixed(2) + ' KWH';
+            document.getElementById('total-cost').textContent = formatRupiah(totalCost);
+        }
+        
+        // Reset semua data
+        function resetData() {
+            if (confirm('Apakah Anda yakin ingin mereset semua data?')) {
+                // Reset input values
+                document.getElementById('token-amount').value = '100000';
+                document.getElementById('token-kwh').value = '68.5';
+                document.getElementById('saldo-awal').value = '72.94';
+                document.getElementById('saldo-akhir').value = '71.14';
+                document.getElementById('duration').value = '11';
+                document.getElementById('current-balance').value = '71.14';
+                document.getElementById('add-saldo').value = '';
+                document.getElementById('device-name').value = '';
+                document.getElementById('device-power').value = '';
+                document.getElementById('device-hours').value = '';
+                
+                // Reset devices
+                devices = [];
+                renderDevices();
+                
+                // Recalculate
+                calculateTarif();
+                calculateUsage();
+                calculateBalance();
+                
+                showNotification('Semua data berhasil direset!', 'success');
+            }
+        }
+        
+        // Ekspor data ke JSON
+        function exportData() {
+            const data = {
+                tokenAmount: document.getElementById('token-amount').value,
+                tokenKwh: document.getElementById('token-kwh').value,
+                saldoAwal: document.getElementById('saldo-awal').value,
+                saldoAkhir: document.getElementById('saldo-akhir').value,
+                duration: document.getElementById('duration').value,
+                currentBalance: document.getElementById('current-balance').value,
+                devices: devices
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'data-listrik.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            showNotification('Data berhasil diekspor!', 'success');
+        }
+        
+        // Impor data dari JSON
+        function importData() {
+            document.getElementById('import-file').click();
+        }
+        
+        // Handle file import
+        function handleFileImport(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    
+                    // Set values
+                    document.getElementById('token-amount').value = data.tokenAmount || '';
+                    document.getElementById('token-kwh').value = data.tokenKwh || '';
+                    document.getElementById('saldo-awal').value = data.saldoAwal || '';
+                    document.getElementById('saldo-akhir').value = data.saldoAkhir || '';
+                    document.getElementById('duration').value = data.duration || '';
+                    document.getElementById('current-balance').value = data.currentBalance || '';
+                    
+                    // Set devices
+                    devices = data.devices || [];
+                    renderDevices();
+                    
+                    // Recalculate
+                    calculateTarif();
+                    calculateUsage();
+                    calculateBalance();
+                    
+                    showNotification('Data berhasil diimpor!', 'success');
+                } catch (error) {
+                    showNotification('Gagal mengimpor data: Format file tidak valid', 'error');
+                    console.error(error);
+                }
+                
+                // Reset input file
+                e.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+        
+        // Generate PDF report
+        function generatePDF() {
+            // Update PDF template with current data
+            document.getElementById('pdf-token-amount').textContent = formatRupiah(parseFloat(document.getElementById('token-amount').value));
+            document.getElementById('pdf-token-kwh').textContent = document.getElementById('token-kwh').value + ' KWH';
+            document.getElementById('pdf-tarif').textContent = formatRupiah(tarifPerKwh);
+            document.getElementById('pdf-saldo-awal').textContent = document.getElementById('saldo-awal').value + ' KWH';
+            document.getElementById('pdf-saldo-akhir').textContent = document.getElementById('saldo-akhir').value + ' KWH';
+            document.getElementById('pdf-duration').textContent = document.getElementById('duration').value + ' jam';
+            document.getElementById('pdf-pemakaian').textContent = document.getElementById('pemakaian-result').textContent;
+            document.getElementById('pdf-biaya').textContent = document.getElementById('biaya-result').textContent;
+            document.getElementById('pdf-saldo').textContent = document.getElementById('current-balance').value + ' KWH';
+            document.getElementById('pdf-nilai-saldo').textContent = document.getElementById('sisa-value').textContent;
+            
+            // Add current date
+            const now = new Date();
+            document.getElementById('pdf-date').textContent = now.toLocaleString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            // Update devices list in PDF template
+            const pdfDevicesList = document.getElementById('pdf-devices-list');
+            pdfDevicesList.innerHTML = '';
+            
+            let totalKwh = 0;
+            let totalCost = 0;
+            
+            devices.forEach(device => {
+                const dailyKwh = (device.power * device.hours) / 1000;
+                const dailyCost = dailyKwh * tarifPerKwh;
+                
+                totalKwh += dailyKwh;
+                totalCost += dailyCost;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="padding: 10px; border-bottom: 1px solid #eee;">${device.name}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee;">${device.power} W</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee;">${device.hours} jam</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee;">${dailyKwh.toFixed(2)} KWH</td>
+                    <td style="padding: 10px; border-bottom: 1px solid #eee;">${formatRupiah(dailyCost)}</td>
+                `;
+                pdfDevicesList.appendChild(row);
+            });
+            
+            document.getElementById('pdf-total-kwh').textContent = totalKwh.toFixed(2) + ' KWH';
+            document.getElementById('pdf-total-cost').textContent = formatRupiah(totalCost);
+            
+            // Create PDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            
+            html2canvas(document.getElementById('pdf-template')).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = doc.internal.pageSize.getWidth();
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                
+                doc.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                
+                const fileName = `laporan-listrik-${new Date().toISOString().slice(0, 10)}.pdf`;
+                doc.save(fileName);
+                
+                showNotification(`PDF berhasil disimpan: ${fileName}`, 'success');
+            }).catch(error => {
+                console.error('Error generating PDF:', error);
+                showNotification('Gagal menyimpan PDF. Silakan coba lagi.', 'error');
+            });
+        }
+        
+        // Event listeners
+        document.getElementById('calculate-tarif').addEventListener('click', calculateTarif);
+        document.getElementById('calculate-usage').addEventListener('click', calculateUsage);
+        document.getElementById('calculate-balance').addEventListener('click', calculateBalance);
+        document.getElementById('calculate-add').addEventListener('click', calculateAddSaldo);
+        document.getElementById('add-device').addEventListener('click', addDevice);
+        document.getElementById('reset-btn').addEventListener('click', resetData);
+        document.getElementById('export-btn').addEventListener('click', exportData);
+        document.getElementById('import-btn').addEventListener('click', importData);
+        document.getElementById('import-file').addEventListener('change', handleFileImport);
+        document.getElementById('pdf-btn').addEventListener('click', generatePDF);
+        
+        // Inisialisasi
+        document.addEventListener('DOMContentLoaded', () => {
+            calculateTarif();
+            calculateUsage();
+            renderDevices();
+            
+            // Tampilkan pesan selamat datang
+            setTimeout(() => {
+                showNotification('Selamat datang di Kalkulator Listrik Prabayar!', 'info');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
