@@ -83,6 +83,10 @@
             background: linear-gradient(90deg, #4caf50, #388e3c);
         }
         
+        .save-btn {
+            background: linear-gradient(90deg, #9c27b0, #7b1fa2);
+        }
+        
         .action-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -295,6 +299,69 @@
             margin: 10px 0;
         }
         
+        .log-container {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            background-color: #f9f9f9;
+        }
+        
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .log-item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-left: 4px solid #7b1fa2;
+        }
+        
+        .log-title {
+            font-weight: 600;
+            color: #4a148c;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .log-datetime {
+            font-size: 14px;
+            color: #777;
+        }
+        
+        .log-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .log-detail {
+            background: #f0f4ff;
+            padding: 8px;
+            border-radius: 6px;
+        }
+        
+        .log-detail-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 3px;
+        }
+        
+        .log-detail-value {
+            font-weight: 600;
+            color: #333;
+        }
+        
         @media (max-width: 600px) {
             .container {
                 padding: 15px;
@@ -324,6 +391,10 @@
             
             .top-buttons {
                 gap: 8px;
+            }
+            
+            .log-details {
+                grid-template-columns: 1fr;
             }
         }
         
@@ -400,6 +471,25 @@
         .card:nth-child(2) { animation-delay: 0.1s; }
         .card:nth-child(3) { animation-delay: 0.2s; }
         .card:nth-child(4) { animation-delay: 0.3s; }
+        
+        /* Scrollbar styling */
+        .log-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .log-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .log-container::-webkit-scrollbar-thumb {
+            background: #c5c5c5;
+            border-radius: 10px;
+        }
+        
+        .log-container::-webkit-scrollbar-thumb:hover {
+            background: #7b1fa2;
+        }
     </style>
 </head>
 <body>
@@ -411,6 +501,9 @@
             <div class="top-buttons">
                 <button id="reset-btn" class="action-btn reset-btn">
                     <i class="fas fa-redo"></i> Reset Data
+                </button>
+                <button id="save-btn" class="action-btn save-btn">
+                    <i class="fas fa-save"></i> Save Data
                 </button>
                 <button id="pdf-btn" class="action-btn pdf-btn">
                     <i class="fas fa-file-pdf"></i> Simpan PDF
@@ -578,6 +671,20 @@
             </div>
         </div>
         
+        <!-- Log Pemakaian Section -->
+        <div class="card">
+            <div class="log-header">
+                <h2 class="card-title"><i class="fas fa-clipboard-list"></i> Log Pemakaian</h2>
+                <button id="clear-logs" class="action-btn reset-btn">
+                    <i class="fas fa-trash"></i> Clear Logs
+                </button>
+            </div>
+            <div class="log-container" id="log-container">
+                <!-- Log items will be added here -->
+                <div class="log-empty">Belum ada log pemakaian. Hitung pemakaian untuk membuat log baru.</div>
+            </div>
+        </div>
+        
         <div id="pdf-template" class="hidden">
             <div style="padding: 20px; font-family: Arial, sans-serif;">
                 <h1 style="text-align: center; color: #4a148c; margin-bottom: 20px;">
@@ -610,7 +717,7 @@
                         <span>Saldo Awal:</span>
                         <span id="pdf-saldo-awal" style="font-weight: bold;">72.94 KWH</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <div style="display: fit-content; justify-content: space-between; margin-bottom: 10px;">
                         <span>Saldo Akhir:</span>
                         <span id="pdf-saldo-akhir" style="font-weight: bold;">71.14 KWH</span>
                     </div>
@@ -681,6 +788,7 @@
         // Tarif per KWH
         let tarifPerKwh = 1459.85;
         let devices = [];
+        let usageLogs = [];
         
         // Format angka menjadi Rupiah
         function formatRupiah(angka) {
@@ -761,6 +869,9 @@
                 // Update saldo saat ini
                 document.getElementById('current-balance').value = saldoAkhir.toFixed(2);
                 calculateBalance();
+                
+                // Tambahkan log pemakaian
+                addUsageLog(saldoAwal, saldoAkhir, pemakaian, biaya, saldoAkhir);
             }
         }
         
@@ -887,6 +998,57 @@
             }
         }
         
+        // Simpan data ke localStorage
+        function saveData() {
+            const data = {
+                tokenAmount: document.getElementById('token-amount').value,
+                tokenKwh: document.getElementById('token-kwh').value,
+                saldoAwal: document.getElementById('saldo-awal').value,
+                saldoAkhir: document.getElementById('saldo-akhir').value,
+                duration: document.getElementById('duration').value,
+                currentBalance: document.getElementById('current-balance').value,
+                devices: devices,
+                logs: usageLogs
+            };
+            
+            localStorage.setItem('electricityCalculatorData', JSON.stringify(data));
+            showNotification('Data berhasil disimpan!', 'success');
+        }
+        
+        // Load data from localStorage
+        function loadData() {
+            const savedData = localStorage.getItem('electricityCalculatorData');
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    
+                    // Set values
+                    document.getElementById('token-amount').value = data.tokenAmount || '';
+                    document.getElementById('token-kwh').value = data.tokenKwh || '';
+                    document.getElementById('saldo-awal').value = data.saldoAwal || '';
+                    document.getElementById('saldo-akhir').value = data.saldoAkhir || '';
+                    document.getElementById('duration').value = data.duration || '';
+                    document.getElementById('current-balance').value = data.currentBalance || '';
+                    
+                    // Set devices
+                    devices = data.devices || [];
+                    renderDevices();
+                    
+                    // Set logs
+                    usageLogs = data.logs || [];
+                    renderLogs();
+                    
+                    // Recalculate
+                    calculateTarif();
+                    calculateUsage();
+                    calculateBalance();
+                    
+                } catch (error) {
+                    console.error('Error loading saved data:', error);
+                }
+            }
+        }
+        
         // Ekspor data ke JSON
         function exportData() {
             const data = {
@@ -896,7 +1058,8 @@
                 saldoAkhir: document.getElementById('saldo-akhir').value,
                 duration: document.getElementById('duration').value,
                 currentBalance: document.getElementById('current-balance').value,
-                devices: devices
+                devices: devices,
+                logs: usageLogs
             };
             
             const dataStr = JSON.stringify(data, null, 2);
@@ -939,6 +1102,10 @@
                     devices = data.devices || [];
                     renderDevices();
                     
+                    // Set logs
+                    usageLogs = data.logs || [];
+                    renderLogs();
+                    
                     // Recalculate
                     calculateTarif();
                     calculateUsage();
@@ -954,6 +1121,95 @@
                 e.target.value = '';
             };
             reader.readAsText(file);
+        }
+        
+        // Tambahkan log pemakaian
+        function addUsageLog(saldoAwal, saldoAkhir, pemakaian, biaya, sisaSaldo) {
+            const now = new Date();
+            const logEntry = {
+                id: Date.now(),
+                datetime: now,
+                saldoAwal: saldoAwal,
+                saldoAkhir: saldoAkhir,
+                pemakaian: pemakaian,
+                biaya: biaya,
+                sisaSaldo: sisaSaldo
+            };
+            
+            usageLogs.unshift(logEntry); // Add to beginning of array
+            if (usageLogs.length > 10) {
+                usageLogs.pop(); // Keep only last 10 logs
+            }
+            
+            renderLogs();
+            saveData(); // Auto-save when adding log
+        }
+        
+        // Render log pemakaian
+        function renderLogs() {
+            const logContainer = document.getElementById('log-container');
+            logContainer.innerHTML = '';
+            
+            if (usageLogs.length === 0) {
+                logContainer.innerHTML = '<div class="log-empty">Belum ada log pemakaian. Hitung pemakaian untuk membuat log baru.</div>';
+                return;
+            }
+            
+            usageLogs.forEach(log => {
+                const logItem = document.createElement('div');
+                logItem.className = 'log-item';
+                
+                const dateTimeStr = log.datetime.toLocaleString('id-ID', {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                
+                logItem.innerHTML = `
+                    <div class="log-title">
+                        <span>Pemakaian Listrik</span>
+                        <span class="log-datetime">${dateTimeStr}</span>
+                    </div>
+                    <div class="log-details">
+                        <div class="log-detail">
+                            <div class="log-detail-label">Saldo Awal</div>
+                            <div class="log-detail-value">${log.saldoAwal.toFixed(2)} kWh</div>
+                        </div>
+                        <div class="log-detail">
+                            <div class="log-detail-label">Saldo Akhir</div>
+                            <div class="log-detail-value">${log.saldoAkhir.toFixed(2)} kWh</div>
+                        </div>
+                        <div class="log-detail">
+                            <div class="log-detail-label">Total Pemakaian</div>
+                            <div class="log-detail-value">${log.pemakaian.toFixed(2)} kWh</div>
+                        </div>
+                        <div class="log-detail">
+                            <div class="log-detail-label">Biaya Pemakaian</div>
+                            <div class="log-detail-value">${formatRupiah(log.biaya)}</div>
+                        </div>
+                        <div class="log-detail">
+                            <div class="log-detail-label">Sisa Saldo</div>
+                            <div class="log-detail-value">${log.sisaSaldo.toFixed(2)} kWh</div>
+                        </div>
+                    </div>
+                `;
+                
+                logContainer.appendChild(logItem);
+            });
+        }
+        
+        // Clear all logs
+        function clearLogs() {
+            if (confirm('Apakah Anda yakin ingin menghapus semua log pemakaian?')) {
+                usageLogs = [];
+                renderLogs();
+                saveData(); // Update saved data
+                showNotification('Semua log pemakaian berhasil dihapus!', 'success');
+            }
         }
         
         // Generate PDF report
@@ -1037,16 +1293,20 @@
         document.getElementById('calculate-add').addEventListener('click', calculateAddSaldo);
         document.getElementById('add-device').addEventListener('click', addDevice);
         document.getElementById('reset-btn').addEventListener('click', resetData);
+        document.getElementById('save-btn').addEventListener('click', saveData);
         document.getElementById('export-btn').addEventListener('click', exportData);
         document.getElementById('import-btn').addEventListener('click', importData);
         document.getElementById('import-file').addEventListener('change', handleFileImport);
         document.getElementById('pdf-btn').addEventListener('click', generatePDF);
+        document.getElementById('clear-logs').addEventListener('click', clearLogs);
         
         // Inisialisasi
         document.addEventListener('DOMContentLoaded', () => {
+            loadData(); // Load saved data
             calculateTarif();
             calculateUsage();
             renderDevices();
+            renderLogs();
             
             // Tampilkan pesan selamat datang
             setTimeout(() => {
